@@ -16,6 +16,11 @@
           (import ./tasks.nix { inherit tasks-nvim; })
         ];
       };
+      ai-agents = { config, pkgs, lib, ... }: {
+        imports = [
+          ./ai-agents.nix
+        ];
+      };
     };
   };
 }
