@@ -10,8 +10,4 @@ with lib;
     gemini = mkDefault "gemini";
     pi = mkDefault "${pi-nix.packages.${pkgs.system}.default}/bin/pi";
   };
-
-  home.packages = [
-    pi-nix.packages.${pkgs.system}.default
-  ];
 }
