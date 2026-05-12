@@ -1,3 +1,4 @@
+{ pi-nix }:
 { config, pkgs, lib, userSettings ? {}, ... }:
 
 with lib;
@@ -7,5 +8,10 @@ with lib;
   services.agent-tracker.enableTmuxIntegration = mkDefault true;
   services.agent-tracker.agents = {
     gemini = mkDefault "gemini";
+    pi = mkDefault "${pi-nix.packages.${pkgs.system}.default}/bin/pi";
   };
+
+  home.packages = [
+    pi-nix.packages.${pkgs.system}.default
+  ];
 }

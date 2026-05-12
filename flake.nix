@@ -7,9 +7,13 @@
       url = "github:tanmayv/tasks.nvim";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pi-nix = {
+      url = "github:lukasl-dev/pi.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, tasks-nvim, ... }@inputs: {
+  outputs = { self, nixpkgs, tasks-nvim, pi-nix, ... }@inputs: {
     homeManagerModules = {
       tasks = { config, pkgs, lib, ... }: {
         imports = [
@@ -18,7 +22,7 @@
       };
       ai-agents = { config, pkgs, lib, ... }: {
         imports = [
-          ./ai-agents.nix
+          (import ./ai-agents.nix { inherit pi-nix; })
         ];
       };
     };
