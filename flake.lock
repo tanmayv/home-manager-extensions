@@ -45,17 +45,37 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1777954456,
-        "narHash": "sha256-hGdgeU2Nk87RAuZyYjyDjFL6LK7dAZN5RE9+hrDTkDU=",
+        "lastModified": 1778443072,
+        "narHash": "sha256-zi7/fsqM/kFdNuED//4WOCUtezGtKKqRNORjMvfwjnA=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "549bd84d6279f9852cae6225e372cc67fb91a4c1",
+        "rev": "da5ad661ba4e5ef59ba743f0d112cbc30e474f32",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nvim-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778678755,
+        "narHash": "sha256-K9Ju3pQIFhmdSoIULPaMrEgiHEq/M3f+PMK4aswz7Bg=",
+        "owner": "tanmayv",
+        "repo": "neovim-flake",
+        "rev": "ee0d087eb7a28dba274904fb4b8c45aedaa715a2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tanmayv",
+        "repo": "neovim-flake",
         "type": "github"
       }
     },
@@ -67,11 +87,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1778568709,
-        "narHash": "sha256-INlR/RJ6Hac8BhyoOlil2s8oo6hY9W3gamD2EzjRqUM=",
+        "lastModified": 1778657337,
+        "narHash": "sha256-ZKHdD/5NH1wp/KD+2L5J8ll1CiayVDUAcf7ngrzmHtE=",
         "owner": "lukasl-dev",
         "repo": "pi.nix",
-        "rev": "dd7dc8cf3697eec91c6e6655e1d51ea2decbf45b",
+        "rev": "e442aea86c9c615703a6d660c0a2ada9a831ce65",
         "type": "github"
       },
       "original": {
@@ -83,6 +103,7 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "nvim-nix": "nvim-nix",
         "pi-nix": "pi-nix",
         "tasks-nvim": "tasks-nvim"
       }
