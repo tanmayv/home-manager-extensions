@@ -11,9 +11,13 @@
       url = "github:lukasl-dev/pi.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nvim-nix = {
+      url = "github:tanmayv/neovim-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, tasks-nvim, pi-nix, ... }@inputs: {
+  outputs = { self, nixpkgs, tasks-nvim, pi-nix, nvim-nix, ... }@inputs: {
     homeManagerModules = {
       tasks = { config, pkgs, lib, ... }: {
         imports = [
