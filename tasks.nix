@@ -95,6 +95,42 @@ let
     '';
   };
 
+  tmux-list-tasks = pkgs.writeShellApplication {
+    name = "tmux-list-tasks";
+    runtimeInputs = with pkgs; [ coreutils bash fzf ];
+    text = ''
+      items=""
+      while IFS=$'\t' read -r due open ws; do
+        [[ -z "$ws" ]] && continue
+        display_printf=$(printf "\033[31mDue: %-3s\033[0m | \033[33mOpen: %-3s\033[0m | \033[1;34m%s\033[0m" "$due" "$open" "$ws")
+        line=$(printf "%s\t%s\t%s\t%s" "$due" "$open" "$ws" "$display_printf")
+        if [[ -z "$items" ]]; then
+          items="$line"
+        else
+          items=$(printf "%s\n%s" "$items" "$line")
+        fi
+      done < <(task projects 2>/dev/null)
+
+      if [[ -z "$items" ]]; then
+        echo "No workspaces with open tasks found. Aborting."
+        exit 1
+      fi
+
+      selected=$(echo "$items" | fzf --delimiter '\t' --with-nth 4 --ansi --prompt="Select Workspace: ")
+
+      if [[ -z "$selected" ]]; then
+        echo "No workspace selected. Aborting."
+        exit 1
+      fi
+
+      workspace=$(echo "$selected" | cut -f3)
+
+      if [[ -n "$workspace" ]]; then
+        exec task -p "$workspace"
+      fi
+    '';
+  };
+
 in
 {
   options.programs.tasks = {
@@ -111,6 +147,7 @@ in
       tmux-create-task
       tmux-create-note
       tmux-task-stats
+      tmux-list-tasks
     ];
 
     xdg.configFile."task-manager-tui/config.json".text = ''
@@ -128,6 +165,7 @@ in
       bind-key C-c display-popup -w 95% -h 80% -E "${tmux-create-note}/bin/tmux-create-note || sleep 5000"
       bind-key T display-popup -w 95% -h 80% -E "${tmux-create-task}/bin/tmux-create-task || sleep 5000"
       bind-key t display-popup -w 95% -h 80% -E "bash -c 'S=\$(tmux display-message -p \"#S\"); task -p \"\$S\"'"
+      bind-key C-n display-popup -w 95% -h 80% -E "${tmux-list-tasks}/bin/tmux-list-tasks || sleep 5000"
       bind-key -T root MouseDown1StatusLeft display-popup -w 95% -h 80% -E "bash -c 'S=\$(tmux display-message -p \"#S\"); task -p \"\$S\"'"
     '';
 
