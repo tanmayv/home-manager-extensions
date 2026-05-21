@@ -4,6 +4,7 @@
 with lib;
 
 let
+  enablePi = userSettings.enable-pi-agent or false;
   piPackage = pi-nix.packages.${pkgs.system}.default;
   claudePackage = builtins.tryEval pkgs.claude-code;
 in
@@ -14,14 +15,14 @@ in
     gemini = mkDefault "gemini";
     claude = mkDefault "claude";
     codex = mkDefault "codex";
+  } // (optionalAttrs enablePi {
     pi = mkDefault "${piPackage}/bin/pi";
-  };
+  });
 
   home.packages = mkIf (!config.services.agent-tracker.enable) (
     (optional claudePackage.success claudePackage.value) ++ [
       pkgs.codex
-      piPackage
-    ]
+    ] ++ (optional enablePi piPackage)
   );
 
   home.file = {
