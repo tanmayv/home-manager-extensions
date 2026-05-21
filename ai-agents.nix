@@ -23,4 +23,11 @@ in
       piPackage
     ]
   );
+
+  home.file = {
+    ".gemini/GEMINI.md".source = ./GEMINI.md;
+    ".gemini/CLAUDE.md".source = ./GEMINI.md;
+    ".gemini/CODEX.md".source = ./GEMINI.md;
+    ".gemini/PI.md".source = ./GEMINI.md;
+  };
 }
