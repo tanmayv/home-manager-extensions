@@ -23,8 +23,26 @@ To maintain persistent memory across sessions, agents have access to a dedicated
  
  Agents MUST communicate across panes and sessions using specialized protocols.
  
- - **CRITICAL**: Use the `tmux-agent-comms` skill when you are asked to change your name, talk to another agent, send a message, or ask a question to another agent. This skill contains all the necessary steps and guidelines for effective communication.
- - If you receive a message of format `From <agent-name> | <message>` Use `tmux-agent-comms` to reply to the agent.
+ - **Discovering Other Agents**: To see all active agents, their display names, stable agent IDs, and tmux pane numbers, run:
+   ```bash
+   agent-tracker-ctl list
+   ```
+   *   This returns a JSON object of all tracked agents. Your own entry is marked with `"is_this_me": true`.
+ - **Alias Resolution**: If you send a message to a target agent's old display name (an alias), the tracker daemon will resolve and deliver the message to the new name, but will print a warning: `Note: Agent '<old_name>' was renamed to '<current_name>'.` You MUST note this name correction for future communication.
+ - **Renaming & Focusing**:
+   *   To rename yourself (change your display name):
+     ```bash
+     agent-tracker-ctl rename <new_name>
+     ```
+     *(Renaming another agent requires `--force`: `agent-tracker-ctl rename --force <old_name> <new_name>`)*.
+   *   To focus another agent's tmux pane in the terminal:
+     ```bash
+     agent-tracker-ctl focus <target_agent_name>
+     ```
+     *(Or by ID: `agent-tracker-ctl focus --id <target_agent_id>`)*.
+ - **Inbox Direct Messages**: If you receive a message of format `From <agent-name> | <message>` (or similar) directly in your inbox:
+   1. Read your inbox: `agent-tracker-ctl read-inbox --clear`.
+   2. Reply using `agent-tracker-ctl send-message` targeting the sender's name or ID.
  - **Inbox Notifications**: If you receive a terminal/pane notification of the format `New message in inbox from <sender_name>`, you MUST immediately read your inbox by running:
    ```bash
    agent-tracker-ctl read-inbox --clear
