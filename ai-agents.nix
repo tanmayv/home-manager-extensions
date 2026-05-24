@@ -39,5 +39,6 @@ in
       config.lib.file.mkOutOfStoreSymlink "${piSkillsDir}/agent-tracker-ctl";
     ".codex/skills/agent-inbox-user-reply".source =
       config.lib.file.mkOutOfStoreSymlink "${piSkillsDir}/agent-inbox-user-reply";
+    ".pi/agent/extensions/auto-restart-watchdog.ts".source = ./pi-extensions/auto-restart-watchdog.ts;
   };
 }
