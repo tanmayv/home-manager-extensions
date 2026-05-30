@@ -7,7 +7,7 @@ The name is set as the `@agent-name` tmux option.
 
 - **Retrieving Your Identity**: You MUST use the following command to find your own name, agent ID, and other metadata:
   ```bash
-  agent-tracker-ctl whoami
+  broccoli-comms agent-tracker whoami
   ```
 
 
@@ -25,32 +25,32 @@ To maintain persistent memory across sessions, agents have access to a dedicated
  
  - **Discovering Other Agents**: To see all active agents, their display names, stable agent IDs, and tmux pane numbers, run:
    ```bash
-   agent-tracker-ctl list
+   broccoli-comms agent-tracker list
    ```
    *   This returns a JSON object of all tracked agents. Your own entry is marked with `"is_this_me": true`.
  - **Alias Resolution**: If you send a message to a target agent's old display name (an alias), the tracker daemon will resolve and deliver the message to the new name, but will print a warning: `Note: Agent '<old_name>' was renamed to '<current_name>'.` You MUST note this name correction for future communication.
  - **Renaming & Focusing**:
    *   To rename yourself (change your display name):
      ```bash
-     agent-tracker-ctl rename <new_name>
+     broccoli-comms agent-tracker rename <new_name>
      ```
-     *(Renaming another agent requires `--force`: `agent-tracker-ctl rename --force <old_name> <new_name>`)*.
+     *(Renaming another agent requires `--force`: `broccoli-comms agent-tracker rename --force <old_name> <new_name>`)*.
    *   To focus another agent's tmux pane in the terminal:
      ```bash
-     agent-tracker-ctl focus <target_agent_name>
+     broccoli-comms agent-tracker focus <target_agent_name>
      ```
-     *(Or by ID: `agent-tracker-ctl focus --id <target_agent_id>`)*.
+     *(Or by ID: `broccoli-comms agent-tracker focus --id <target_agent_id>`)*.
  - **Inbox Direct Messages**: If you receive a message of format `From <agent-name> | <message>` (or similar) directly in your inbox:
-   1. Read your inbox: `agent-tracker-ctl read-inbox --clear`.
-   2. Reply using `agent-tracker-ctl send-message` targeting the sender's name or ID.
+   1. Read your inbox: `broccoli-comms agent-tracker read-inbox --clear`.
+   2. Reply using `broccoli-comms agent-tracker send-message` targeting the sender's name or ID.
  - **Inbox Notifications**: If you receive a terminal/pane notification of the format `New message in inbox from <sender_name>`, you MUST immediately read your inbox by running:
    ```bash
-   agent-tracker-ctl read-inbox --clear
+   broccoli-comms agent-tracker read-inbox --clear
    ```
    - **Acknowledging agent-communicator**: If the message is from `agent-communicator`, you MUST always ACK the message first before acting on it:
      - **Immediate ACK with Plan**: Prefer to reply with an "Acknowledged" message that also includes a brief **plan of action**:
        ```bash
-       agent-tracker-ctl send-message agent-communicator "Acknowledged. Plan of action: 1. ... 2. ..."
+       broccoli-comms agent-tracker send-message agent-communicator "Acknowledged. Plan of action: 1. ... 2. ..."
        ```
      - **Validation & Approval**:
        - Prefer getting validation on complex queries, destructive changes, or risky operations.
@@ -67,14 +67,14 @@ To maintain persistent memory across sessions, agents have access to a dedicated
  - **Replying to Messages**:
    - Always prefer using the CLI tool to send the reply, using the sender's name directly extracted from the notification message:
      ```bash
-     agent-tracker-ctl send-message <sender_name> "<your_reply_message>"
+     broccoli-comms agent-tracker send-message <sender_name> "<your_reply_message>"
      ```
-   - If the command fails (e.g., because the name is incorrect or the agent is no longer registered), you MUST run `agent-tracker-ctl list` to confirm the correct active name and try again.
+   - If the command fails (e.g., because the name is incorrect or the agent is no longer registered), you MUST run `broccoli-comms agent-tracker list` to confirm the correct active name and try again.
  - **Forwarding/Delegating to Others**: If the received message instructs you to send a message or delegate a task to another agent:
-   - First, run `agent-tracker-ctl list` to validate that the target agent's name exists and is active.
+   - First, run `broccoli-comms agent-tracker list` to validate that the target agent's name exists and is active.
    - Once validated, send the message using:
      ```bash
-     agent-tracker-ctl send-message <target_agent_name> "<message_content>"
+     broccoli-comms agent-tracker send-message <target_agent_name> "<message_content>"
      ```
  - **Message Formatting**: When sending any inter-agent message (specifically when talking to `agent-communicator`), you MUST always use well-formatted Markdown.
    - Do NOT escape newlines (e.g., do not use `\n` literal). Use actual literal newlines in your message content to ensure it renders correctly in the UI.
@@ -89,7 +89,7 @@ To maintain persistent memory across sessions, agents have access to a dedicated
 - **Procedure Log File**: In a multi-agent environment, you MUST maintain an agent-specific procedure log at `./.scratch/procedure-<agent_name>-<date>.md` (where `<agent_name>` is your own name retrieved via `whoami` and `<date>` is `YYYY-MM-DD` relative to your current working directory) to log your execution history. This prevents concurrent write conflicts with other active agents.
   - **Concurrency Safety**: You MUST use the custom `safe-scratch-write` CLI tool to append log entries to this file:
     ```bash
-    safe-scratch-write --file ./.scratch/procedure-$(agent-tracker-ctl whoami | grep "Name:" | awk '{print $2}')-$(date +%Y-%m-%d).md --append "ACTION: Your actions here"
+    safe-scratch-write --file ./.scratch/procedure-$(broccoli-comms agent-tracker whoami | grep "Name:" | awk '{print $2}')-$(date +%Y-%m-%d).md --append "ACTION: Your actions here"
     ```
   - **Content**: The file must document:
     1. What tasks were asked.

@@ -11,7 +11,6 @@ let
   geminiPackage = builtins.tryEval pkgs.gemini-cli;
   agentCommand = package: binName:
     mkDefault (if package.success then "${package.value}/bin/${binName}" else binName);
-  piSkillsDir = "${config.home.homeDirectory}/.pi/agent/skills";
 in
 {
   services.agent-tracker.enable = mkDefault (userSettings.enable-agent-tracker or false);
@@ -37,11 +36,13 @@ in
     ".gemini/CODEX.md".source = ./GEMINI.md;
     ".gemini/PI.md".source = ./GEMINI.md;
     ".claude/CLAUDE.md".source = ./GEMINI.md;
+    ".claude/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
+    ".claude/skills/agent-inbox-user-reply".source = ./skills/agent-inbox-user-reply;
     ".codex/AGENTS.md".source = ./GEMINI.md;
-    ".codex/skills/agent-tracker-ctl".source =
-      config.lib.file.mkOutOfStoreSymlink "${piSkillsDir}/agent-tracker-ctl";
-    ".codex/skills/agent-inbox-user-reply".source =
-      config.lib.file.mkOutOfStoreSymlink "${piSkillsDir}/agent-inbox-user-reply";
+    ".codex/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
+    ".codex/skills/agent-inbox-user-reply".source = ./skills/agent-inbox-user-reply;
+    ".pi/agent/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
+    ".pi/agent/skills/agent-inbox-user-reply".source = ./skills/agent-inbox-user-reply;
     ".pi/agent/extensions/auto-restart-watchdog.ts".source = ./pi-extensions/auto-restart-watchdog.ts;
   };
 }
