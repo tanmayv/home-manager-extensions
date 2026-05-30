@@ -8,16 +8,18 @@ let
   piPackage = pi-nix.packages.${pkgs.system}.default;
   claudePackage = builtins.tryEval pkgs.claude-code;
   codexPackage = builtins.tryEval pkgs.codex;
-  codexCommand = if codexPackage.success then "${codexPackage.value}/bin/codex" else "codex";
+  geminiPackage = builtins.tryEval pkgs.gemini-cli;
+  agentCommand = package: binName:
+    mkDefault (if package.success then "${package.value}/bin/${binName}" else binName);
   piSkillsDir = "${config.home.homeDirectory}/.pi/agent/skills";
 in
 {
   services.agent-tracker.enable = mkDefault (userSettings.enable-agent-tracker or false);
   services.agent-tracker.enableTmuxIntegration = mkDefault true;
   services.agent-tracker.agents = {
-    gemini = mkDefault "gemini";
-    claude = mkDefault "claude";
-    codex = mkDefault codexCommand;
+    gemini = agentCommand geminiPackage "gemini";
+    claude = agentCommand claudePackage "claude";
+    codex = agentCommand codexPackage "codex";
   } // (optionalAttrs enablePi {
     pi = mkDefault "${piPackage}/bin/pi";
   });
@@ -25,6 +27,7 @@ in
   home.packages = mkIf (!config.services.agent-tracker.enable) (
     (optional claudePackage.success claudePackage.value)
     ++ (optional codexPackage.success codexPackage.value)
+    ++ (optional geminiPackage.success geminiPackage.value)
     ++ (optional enablePi piPackage)
   );
 
