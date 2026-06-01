@@ -4,7 +4,7 @@
 with lib;
 
 let
-  enablePi = userSettings.enable-pi-agent or false;
+  enablePi = userSettings.enable-pi-agent or true;
   piPackage = pi-nix.packages.${pkgs.system}.default;
   claudePackage = builtins.tryEval pkgs.claude-code;
   codexPackage = builtins.tryEval pkgs.codex;
