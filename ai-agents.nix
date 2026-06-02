@@ -5,6 +5,7 @@ with lib;
 
 let
   enablePi = userSettings.enable-pi-agent or true;
+  enableThirdPartyAgents = userSettings.enable-third-party-agents or false;
   piPackage = pi-nix.packages.${pkgs.system}.default;
   claudePackage = builtins.tryEval pkgs.claude-code;
   codexPackage = builtins.tryEval pkgs.codex;
@@ -17,11 +18,12 @@ in
   services.agent-tracker.enableTmuxIntegration = mkDefault true;
   services.agent-tracker.agents = {
     gemini = agentCommand geminiPackage "gemini";
-    claude = agentCommand claudePackage "claude";
-    codex = agentCommand codexPackage "codex";
   } // (optionalAttrs enablePi {
     pi = mkDefault "${piPackage}/bin/pi";
-  });
+  } // (optionalAttrs enableThirdPartyAgents {
+    claude = agentCommand claudePackage "claude";
+    codex = agentCommand codexPackage "codex";
+  }));
 
   home.packages = mkIf (!config.services.agent-tracker.enable) (
     (optional claudePackage.success claudePackage.value)
