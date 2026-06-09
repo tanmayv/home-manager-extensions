@@ -10,24 +10,16 @@ let
   claudePackage = builtins.tryEval pkgs.claude-code;
   codexPackage = builtins.tryEval pkgs.codex;
   geminiPackage = builtins.tryEval pkgs.gemini-cli;
-  agentCommand = package: binName:
-    mkDefault (if package.success then "${package.value}/bin/${binName}" else binName);
 in
 {
   services.agent-tracker.enable = mkDefault (userSettings.enable-agent-tracker or false);
   services.agent-tracker.enableTmuxIntegration = mkDefault true;
-  services.agent-tracker.agents = {
-    gemini = agentCommand geminiPackage "gemini";
-  } // (optionalAttrs enablePi {
-    pi = mkDefault "${piPackage}/bin/pi";
-  } // (optionalAttrs enableThirdPartyAgents {
-    claude = agentCommand claudePackage "claude";
-    codex = agentCommand codexPackage "codex";
-  }));
 
-  # Install the raw agent commands directly. We no longer create command-name
-  # wrappers such as `pi -> broccoli-comms track`; tracked launches must be
-  # explicit via `broccoli-comms run NAME --cwd DIR -- COMMAND [ARGS...]`.
+  # Install the raw agent commands directly. In particular, `pi` must resolve
+  # to the pi.nix package's final Nix-store command (for example
+  # `/nix/store/...-pi-coding-agent-*/bin/pi`), never to a generated tracking
+  # wrapper. Tracked launches must be explicit via:
+  #   broccoli-comms run NAME --cwd DIR -- COMMAND [ARGS...]
   home.packages =
     (optional claudePackage.success claudePackage.value)
     ++ (optional codexPackage.success codexPackage.value)
