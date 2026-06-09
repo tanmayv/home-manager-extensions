@@ -57,6 +57,8 @@ broccoli-comms memory show MEMORY_ID --json
 
 ### 3. Classify evidence
 
+Review the relevant task chain for memory hints before drafting changes. Look across task descriptions, working-state checkpoints, completion submissions, reviewer decisions, `need_improvements` feedback loops, and user corrections/clarifications. Prefer validated-good evidence; treat reviewer blockers and user corrections as strong signals for reusable habits or pitfall episodes.
+
 Look for:
 
 - **User feedback**: `task_result_marked good|bad|need_improvements`, approval decisions, corrections, explicit preferences.
@@ -76,9 +78,11 @@ Use these memory types:
 - `episode`: compact validated task summary.
 - `expertise`: evidence-backed competence note for the agent; no numeric score or ranking.
 
+Before proposing a new memory item, compare the candidate against existing active/pending memory. Prefer updating an existing memory when the new evidence refines, narrows, extends, or corrects an existing habit/skill/episode without changing its core meaning. Propose a new memory only when no existing item is a good semantic home, or when combining them would make the memory too broad or confusing.
+
 For each candidate, include:
 
-- action: `propose`, `revoke`, `reject`, or `no-op`
+- action: `edit`, `propose`, `revoke`, `reject`, or `no-op`
 - type
 - scope
 - subject_agent
@@ -87,6 +91,7 @@ For each candidate, include:
 - evidence task ids / event seqs
 - reason
 - risk / confidence
+- if editing: existing memory_id, current version, and why update is better than adding a new item
 
 ### 5. Prepare final report for user approval
 
@@ -99,6 +104,13 @@ Before running any memory mutation command, present a final report like:
 - Tasks: ...
 - Events: ...
 - Existing active memory: ...
+
+## Proposed edits
+1. memory_id=...
+   title: ...
+   new body: ...
+   evidence: task-..., events ...
+   command that will be run: `broccoli-comms memory edit ...`
 
 ## Proposed additions
 1. type=habit scope=... subject_agent=...
@@ -123,6 +135,17 @@ Stop here and wait for explicit user approval.
 ## Applying approved changes
 
 Only after approval, run the approved CLI commands.
+
+### Edit existing memory when the evidence refines it
+
+```bash
+broccoli-comms memory edit MEMORY_ID \
+  --body 'UPDATED BODY' \
+  --source-task TASK_ID \
+  --tag memory-audit \
+  --expected-version VERSION \
+  --json
+```
 
 ### Propose memory from a validated task
 
