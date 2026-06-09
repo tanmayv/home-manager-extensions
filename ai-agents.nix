@@ -25,12 +25,14 @@ in
     codex = agentCommand codexPackage "codex";
   }));
 
-  home.packages = mkIf (!config.services.agent-tracker.enable) (
+  # Install the raw agent commands directly. We no longer create command-name
+  # wrappers such as `pi -> broccoli-comms track`; tracked launches must be
+  # explicit via `broccoli-comms run NAME --cwd DIR -- COMMAND [ARGS...]`.
+  home.packages =
     (optional claudePackage.success claudePackage.value)
     ++ (optional codexPackage.success codexPackage.value)
     ++ (optional geminiPackage.success geminiPackage.value)
-    ++ (optional enablePi piPackage)
-  );
+    ++ (optional enablePi piPackage);
 
   home.file = {
     ".gemini/GEMINI.md".source = ./GEMINI.md;

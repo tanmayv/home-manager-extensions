@@ -12,7 +12,7 @@ Use this skill whenever the user says something like:
 - `New message in inbox from <agent>`
 - `New message from <agent> (via <host>)`
 - asks to read/respond to an agent inbox message
-- asks to send messages, rename agents, list agents, focus agents, or launch/spin new agents with Broccoli Comms
+- asks to send messages, rename agents, list agents, focus agents, manage live agents, or launch new agents with Broccoli Comms
 
 Prefer the Broccoli Comms wrapper:
 
@@ -61,9 +61,15 @@ Avoid notification loops: do not repeatedly acknowledge pure notification-only m
 
 ```bash
 broccoli-comms --help
+broccoli-comms run --help
+broccoli-comms agent --help
+broccoli-comms agent edit --help
+broccoli-comms agent <subcommand> --help
 broccoli-comms agent-tracker --help
 broccoli-comms agent-tracker <subcommand> --help
 ```
+
+Before recommending launch or managed-agent commands, verify current behavior from `broccoli-comms --help`, relevant subcommand help, or source. Do not rely on stale memory or old skill text.
 
 ### Identify yourself
 
@@ -179,97 +185,49 @@ broccoli-comms agent-tracker rename --force broccoli-comms-agent-1 registry-code
 broccoli-comms agent-tracker rename --force broccoli-comms-agent-2 registry-reviewer
 ```
 
-### Launch/spin a new agent
+### Run a new agent explicitly
 
-Use `spin` to launch an agent command in a tmux session for a working directory. The leaf directory name becomes the tmux session/agent base name.
+Use `broccoli-comms run NAME --cwd DIR -- COMMAND [ARGS...]` for a fresh named agent launch. The `--` separates Broccoli Comms options from the command to run.
 
 ```bash
-broccoli-comms agent-tracker spin /home/user/project pi
-broccoli-comms agent-tracker spin /home/user/project claude
-broccoli-comms agent-tracker spin /home/user/project codex
+broccoli-comms run coder --cwd /home/user/project -- pi
+broccoli-comms run reviewer --cwd /home/user/project -- pi --role reviewer
+broccoli-comms run claude-coder --cwd /home/user/project -- claude
+broccoli-comms run codex-coder --cwd /home/user/project -- codex
 ```
 
-With extra command arguments:
+Use `broccoli-comms agent edit` only for already-running managed agents; for new launches, use `broccoli-comms run`.
+
+`run` creates a fresh `/tmp/broccoli-agents/<name>/<random>/` workspace containing `AGENTS.md` and `bootstrap.json`, while `--cwd` records the source project directory for context.
+
+Create a new coder/reviewer pair for a project:
 
 ```bash
-broccoli-comms agent-tracker spin /home/user/project pi --model gemini-2.5-pro
-```
+broccoli-comms run registry-url-coder --cwd /home/user/projects/broccoli-comms -- pi
+broccoli-comms run registry-url-reviewer --cwd /home/user/projects/broccoli-comms -- pi
 
-Create a new coder/reviewer pair for a project, then rename them after they register:
+broccoli-comms agent list --json
 
-```bash
-# Launch two agents in the same project checkout.
-broccoli-comms agent-tracker spin /home/user/projects/broccoli-comms pi
-broccoli-comms agent-tracker spin /home/user/projects/broccoli-comms pi
-
-# Inspect generated names/UUIDs.
-broccoli-comms agent-tracker list
-
-# Rename generated agents to stable task names.
-broccoli-comms agent-tracker rename --force broccoli-comms-agent-1 registry-url-coder
-broccoli-comms agent-tracker rename --force broccoli-comms-agent-2 registry-url-reviewer
-
-# Send their initial roles.
 broccoli-comms agent-tracker send-message registry-url-coder \
   'You are the coder. Read docs/BROCCOLI_REGISTRY_URL_CONFIG_PLAN.md, implement the task, commit, and notify registry-url-reviewer.'
 broccoli-comms agent-tracker send-message registry-url-reviewer \
   'You are the reviewer. Stand by to review registry-url-coder changes and reply APPROVED or BLOCKED.'
 ```
 
-Disable shell fallback if needed:
-
-```bash
-broccoli-comms agent-tracker spin --no-fallback /home/user/project pi
-```
-
-### Track an ad-hoc command in the current pane
-
-Use `broccoli-comms track` when you want to run a command in the current terminal/tmux pane but still have it register with Agent Communicator. This resolves Broccoli's bundled `agent-wrapper`; `agent-wrapper` does not need to be on `PATH`.
-
-```bash
-broccoli-comms track --name scratch-coder -- pi
-broccoli-comms track --name custom --cwd /repo -- /opt/my-agent/bin/my-agent
-```
-
-The command itself (`pi`, `/opt/my-agent/bin/my-agent`, etc.) must be available on `PATH` or passed as an absolute path.
-
-### Manage configured Broccoli agents
-
-Broccoli Comms also has higher-level managed-agent commands. Use these when you want named agents to persist in Broccoli Comms config and be reconciled by `broccoli-comms start`.
+### Manage running Broccoli agents
 
 ```bash
 broccoli-comms agent list --json
-broccoli-comms agent add coder --cwd /home/user/project --command 'pi'
-broccoli-comms agent add reviewer --cwd /home/user/project --command 'pi --role reviewer'
 broccoli-comms agent focus coder
 broccoli-comms agent attach coder
 broccoli-comms agent restart coder
 broccoli-comms agent remove reviewer
 ```
 
-Example: create persistent coder/reviewer agents for this repository:
+Use `broccoli-comms agent edit` only for an already-running managed agent; it persists changes and restarts that live window:
 
 ```bash
-broccoli-comms agent add registry-url-coder \
-  --cwd /home/user/projects/broccoli-comms \
-  --command 'pi'
-
-broccoli-comms agent add registry-url-reviewer \
-  --cwd /home/user/projects/broccoli-comms \
-  --command 'pi'
-
-broccoli-comms start
-broccoli-comms agent list --json
-broccoli-comms agent-tracker send-message registry-url-coder \
-  'Please implement docs/BROCCOLI_REGISTRY_URL_CONFIG_PLAN.md and notify registry-url-reviewer when ready.'
-```
-
-Example: rename a running managed agent if it registered with a generic name:
-
-```bash
-broccoli-comms agent-tracker list
-broccoli-comms agent-tracker rename --force broccoli-comms-agent-1 registry-url-coder
-broccoli-comms agent focus registry-url-coder
+broccoli-comms agent edit coder --rename coder-main --cwd /home/user/project -- pi --role planner
 ```
 
 After editing managed agents, reconcile them:
@@ -347,8 +305,8 @@ broccoli-comms agent-tracker send-message broccoli-comms-agent-1 \
 ### Start a new local coding agent
 
 ```bash
-broccoli-comms agent-tracker spin /home/user/projects/broccoli-comms pi
-broccoli-comms agent-tracker list
+broccoli-comms run coder --cwd /home/user/projects/broccoli-comms -- pi
+broccoli-comms agent list --json
 ```
 
 ## Safety rules
