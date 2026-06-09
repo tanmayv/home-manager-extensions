@@ -1,0 +1,208 @@
+---
+name: agent-memory-audit
+description: Audit a Broccoli Comms agent's append-only task/event log and approved memory, then propose additions/removals for that agent's facts, habits, skills, episodes, and expertise. Use when asked to review or update an agent's memory from user feedback or event logs.
+allowed-tools: bash read
+---
+
+# Agent Memory Audit Skill
+
+Use this skill when the user asks to audit, refresh, improve, prune, or update an agent's durable memory based on Broccoli Comms tasks, validation, feedback, or append-only event logs.
+
+The goal is to produce a conservative memory-maintenance report first. Do **not** mutate memory until the user explicitly approves the final report.
+
+## Core principles
+
+- Durable memory is in Broccoli Comms, not cwd files.
+- The append-only event log is the evidence source.
+- Active memory must remain concise, scoped, and useful at bootstrap.
+- Do not store secrets, raw transcripts, full logs, or bulky evidence.
+- Explicit user instructions override existing memory/habits/skills.
+- Prefer validated-good evidence. Note weaker evidence clearly.
+- Before changing memory, show the user exactly what will be added, edited, rejected, revoked, or left unchanged.
+
+## Audit workflow
+
+### 1. Identify audit target
+
+Determine:
+
+- `AGENT`: stable agent/profile name to audit.
+- Optional `SCOPE`: project/team/global scope.
+- Optional time/window: task ids, event limit, or recent validated tasks.
+
+If unclear, ask the user for the target agent and scope.
+
+### 2. Gather current durable state
+
+Use Broccoli Comms CLI:
+
+```bash
+broccoli-comms task list --agent AGENT --include-archived --json
+broccoli-comms state list --agent AGENT --json
+broccoli-comms memory list --agent AGENT --json
+broccoli-comms memory budget --agent AGENT --json
+```
+
+For each relevant task, read its append-only events:
+
+```bash
+broccoli-comms events list --task TASK_ID --limit 200 --json
+```
+
+For important existing memories:
+
+```bash
+broccoli-comms memory show MEMORY_ID --json
+```
+
+### 3. Classify evidence
+
+Look for:
+
+- **User feedback**: `task_result_marked good|bad|need_improvements`, approval decisions, corrections, explicit preferences.
+- **Repeated habits**: practices that were corrected or validated more than once.
+- **Skills/playbooks**: repeatable procedures with triggers, steps, checks, and failure modes.
+- **Episodes**: compact validated task summaries worth remembering.
+- **Expertise**: validated areas of competence for the agent, without scores/ranks.
+- **Stale memory**: active memory contradicted by later validation, obsolete tools/paths, duplicate records, or overly broad/unhelpful entries.
+
+### 4. Draft candidate memory changes
+
+Use these memory types:
+
+- `fact`: stable project/user fact.
+- `habit`: behavioral preference or recurring operating practice.
+- `skill`: reusable procedure/playbook. Include when-to-use, steps, checks, and failure modes.
+- `episode`: compact validated task summary.
+- `expertise`: evidence-backed competence note for the agent; no numeric score or ranking.
+
+For each candidate, include:
+
+- action: `propose`, `revoke`, `reject`, or `no-op`
+- type
+- scope
+- subject_agent
+- title
+- concise body
+- evidence task ids / event seqs
+- reason
+- risk / confidence
+
+### 5. Prepare final report for user approval
+
+Before running any memory mutation command, present a final report like:
+
+```markdown
+# Memory audit report for AGENT
+
+## Evidence reviewed
+- Tasks: ...
+- Events: ...
+- Existing active memory: ...
+
+## Proposed additions
+1. type=habit scope=... subject_agent=...
+   title: ...
+   body: ...
+   evidence: task-..., events ...
+   command that will be run: `broccoli-comms memory propose ...`
+
+## Proposed revocations
+1. memory_id=...
+   reason: ...
+   command that will be run: `broccoli-comms memory revoke ...`
+
+## No-op / keep
+- ...
+
+Please approve, edit, or reject this memory update plan.
+```
+
+Stop here and wait for explicit user approval.
+
+## Applying approved changes
+
+Only after approval, run the approved CLI commands.
+
+### Propose memory from a validated task
+
+```bash
+broccoli-comms memory propose \
+  --type habit \
+  --scope SCOPE \
+  --subject-agent AGENT \
+  --title 'TITLE' \
+  --body 'BODY' \
+  --source-task TASK_ID \
+  --tag memory-audit \
+  --json
+```
+
+For skills, use `--type skill` and make the body a compact playbook:
+
+```markdown
+When to use: ...
+Steps:
+1. ...
+Validation checks:
+- ...
+Failure modes:
+- ...
+```
+
+### Trusted manual path
+
+If the user explicitly approves a memory that has no validated source task, use trusted manual only when your runtime identity is allowed to do so:
+
+```bash
+broccoli-comms memory propose \
+  --type fact \
+  --scope SCOPE \
+  --subject-agent AGENT \
+  --title 'TITLE' \
+  --body 'BODY' \
+  --trusted-manual \
+  --tag memory-audit \
+  --json
+```
+
+If the CLI reports `trusted memory actor required`, do not spoof identity. Tell the user/coordinator to approve/apply the proposal from a trusted local context.
+
+### Approve pending proposals
+
+If the user asks you to approve and your runtime is trusted:
+
+```bash
+broccoli-comms memory approve MEMORY_ID --expected-version VERSION --json
+```
+
+If not trusted, leave the memory pending and report the approval command for the user/coordinator.
+
+### Revoke stale active memory
+
+```bash
+broccoli-comms memory revoke MEMORY_ID \
+  --reason 'Concise reason based on later validated evidence' \
+  --expected-version VERSION \
+  --json
+```
+
+### Reject pending stale/bad proposals
+
+```bash
+broccoli-comms memory reject MEMORY_ID \
+  --reason 'Concise reason' \
+  --expected-version VERSION \
+  --json
+```
+
+## Final response
+
+After applying approved commands, report:
+
+- commands run
+- memory ids created/approved/revoked/rejected
+- anything left pending for a trusted user/coordinator
+- any skipped candidates and why
+
+Keep the final summary concise.
