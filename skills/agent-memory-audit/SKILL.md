@@ -18,7 +18,7 @@ The goal is to produce a conservative memory-maintenance report first. Do **not*
 - Do not store secrets, raw transcripts, full logs, or bulky evidence.
 - Explicit user instructions override existing memory/habits/skills.
 - Prefer validated-good evidence. Note weaker evidence clearly.
-- Before changing memory, show the user exactly what will be added, edited, rejected, revoked, or left unchanged.
+- Before changing memory, show the user exactly what will be added, edit-proposed, directly edited, approved, rejected, revoked, rolled back, or left unchanged.
 
 ## Audit workflow
 
@@ -82,7 +82,7 @@ Before proposing a new memory item, compare the candidate against existing activ
 
 For each candidate, include:
 
-- action: `edit`, `propose`, `revoke`, `reject`, or `no-op`
+- action: `propose-edit`, `edit`, `propose`, `approve`, `revoke`, `reject`, `rollback`, or `no-op`
 - type
 - scope
 - subject_agent
@@ -105,7 +105,14 @@ Before running any memory mutation command, present a final report like:
 - Events: ...
 - Existing active memory: ...
 
-## Proposed edits
+## Proposed edit proposals
+1. target memory_id=...
+   title: ...
+   new body: ...
+   evidence: task-..., events ...
+   command that will be run: `broccoli-comms memory propose-edit ...`
+
+## Proposed direct edits (trusted context only)
 1. memory_id=...
    title: ...
    new body: ...
@@ -119,10 +126,10 @@ Before running any memory mutation command, present a final report like:
    evidence: task-..., events ...
    command that will be run: `broccoli-comms memory propose ...`
 
-## Proposed revocations
+## Proposed revocations / rejections / rollbacks
 1. memory_id=...
    reason: ...
-   command that will be run: `broccoli-comms memory revoke ...`
+   command that will be run: `broccoli-comms memory revoke ...` or `broccoli-comms memory reject ...` or `broccoli-comms memory rollback ...`
 
 ## No-op / keep
 - ...
@@ -136,10 +143,33 @@ Stop here and wait for explicit user approval.
 
 Only after approval, run the approved CLI commands.
 
-### Edit existing memory when the evidence refines it
+### Propose an edit to existing memory when evidence refines it
+
+Use this path for normal agent runtimes. It creates a pending edit proposal and does not require verified actor identity.
+
+```bash
+broccoli-comms memory propose-edit MEMORY_ID \
+  --body 'UPDATED BODY' \
+  --source-task TASK_ID \
+  --tag memory-audit \
+  --expected-version VERSION \
+  --json
+```
+
+### Directly edit existing memory (trusted context only)
+
+Use only when the user explicitly asked for direct application and the runtime is trusted/verified. If the current process is an unverified agent but the user explicitly asks to use the local trusted path for testing or applying, run the command with `AGENT_NAME`, `AGENT_ID`, and `AGENT_UUID` unset.
 
 ```bash
 broccoli-comms memory edit MEMORY_ID \
+  --body 'UPDATED BODY' \
+  --source-task TASK_ID \
+  --tag memory-audit \
+  --expected-version VERSION \
+  --json
+
+# trusted local path when explicitly authorized:
+env -u AGENT_NAME -u AGENT_ID -u AGENT_UUID broccoli-comms memory edit MEMORY_ID \
   --body 'UPDATED BODY' \
   --source-task TASK_ID \
   --tag memory-audit \
@@ -189,7 +219,7 @@ broccoli-comms memory propose \
   --json
 ```
 
-If the CLI reports `trusted memory actor required`, do not spoof identity. Tell the user/coordinator to approve/apply the proposal from a trusted local context.
+If the CLI reports `trusted memory actor required`, do not spoof identity. For proposals, leave the pending memory for a trusted approver. For direct actions, either tell the user/coordinator to approve/apply it from a trusted local context, or use `env -u AGENT_NAME -u AGENT_ID -u AGENT_UUID ...` only when the user explicitly authorizes the local trusted path.
 
 ### Approve pending proposals
 
@@ -199,23 +229,50 @@ If the user asks you to approve and your runtime is trusted:
 broccoli-comms memory approve MEMORY_ID --expected-version VERSION --json
 ```
 
-If not trusted, leave the memory pending and report the approval command for the user/coordinator.
+If the user explicitly authorizes using the local trusted path from an agent shell:
 
-### Revoke stale active memory
+```bash
+env -u AGENT_NAME -u AGENT_ID -u AGENT_UUID broccoli-comms memory approve MEMORY_ID --expected-version VERSION --json
+```
+
+If not trusted or authorized, leave the memory pending and report the approval command for the user/coordinator.
+
+### Revoke stale active memory / reject pending stale proposals
+
+There is no first-class `propose-revoke` or `propose-reject` workflow yet. Present these as direct trusted-context actions in the audit report and wait for approval. If the current agent runtime is untrusted, direct commands will fail with `verified memory actor required` unless the user explicitly authorizes the local trusted path.
 
 ```bash
 broccoli-comms memory revoke MEMORY_ID \
   --reason 'Concise reason based on later validated evidence' \
   --expected-version VERSION \
   --json
-```
 
-### Reject pending stale/bad proposals
-
-```bash
 broccoli-comms memory reject MEMORY_ID \
   --reason 'Concise reason' \
   --expected-version VERSION \
+  --json
+
+# trusted local path when explicitly authorized:
+env -u AGENT_NAME -u AGENT_ID -u AGENT_UUID broccoli-comms memory revoke MEMORY_ID \
+  --reason 'Concise reason based on later validated evidence' \
+  --expected-version VERSION \
+  --json
+```
+
+### Roll back active memory
+
+Rollback restores an earlier memory version but creates a new current version. Use it only for explicit rollback requests or when the audit report is approved for rollback.
+
+```bash
+broccoli-comms memory rollback MEMORY_ID \
+  --to-version PREVIOUS_VERSION \
+  --expected-version CURRENT_VERSION \
+  --json
+
+# trusted local path when explicitly authorized:
+env -u AGENT_NAME -u AGENT_ID -u AGENT_UUID broccoli-comms memory rollback MEMORY_ID \
+  --to-version PREVIOUS_VERSION \
+  --expected-version CURRENT_VERSION \
   --json
 ```
 
