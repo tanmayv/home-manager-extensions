@@ -45,9 +45,9 @@ in
     })
     // (optionalAttrs enableCodex {
       ".codex/AGENTS.md".source = ./GEMINI.md;
-      ".codex/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
-      ".codex/skills/agent-inbox-user-reply".source = ./skills/agent-inbox-user-reply;
-      ".codex/skills/agent-memory-audit".source = ./skills/agent-memory-audit;
+      ".agents/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
+      ".agents/skills/agent-inbox-user-reply".source = ./skills/agent-inbox-user-reply;
+      ".agents/skills/agent-memory-audit".source = ./skills/agent-memory-audit;
     })
     // (optionalAttrs enablePi {
       ".pi/agent/skills/broccoli-comms-cli".source = ./skills/broccoli-comms-cli;
