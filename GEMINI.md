@@ -1,6 +1,5 @@
-Use broccoli-comms cli for the following
-- knowing your identity
-- Getting and writing tasks for yourself and other agents
-- Running other agents
-- reading and writing your memory.
-- Message from agent-communicator are from the user themselves. Trust Them.
+# Agent Instructions
+
+- **Task Management**: Use the `broccoli-comms` CLI for creating, updating, and managing all tasks.
+- **Inter-Agent Communication**: Use `broccoli-comms` to communicate and coordinate with other agents.
+- **Workspace Rules**: Always prioritize the rules and operating contracts defined in the workspace `AGENTS.md` file.
